@@ -7,8 +7,7 @@ export async function GET() {
   try {
     const now = new Date();
     
-    const allCatalogs = await db
-      .select({
+    const allCatalogs = await db.select({
         id: catalogs.id,
         storeId: catalogs.storeId,
         title: catalogs.title,
@@ -54,10 +53,7 @@ export async function POST(request: NextRequest) {
       images: JSON.stringify(validatedData.images),
     };
 
-    const result = await db
-      .insert(catalogs)
-      .values(dataToInsert)
-      .returning();
+    const result = await db.insert(catalogs).values(dataToInsert).returning();
     
     return Response.json(result[0], { status: 201 });
   } catch (error) {

@@ -9,7 +9,7 @@ export const stores = sqliteTable("stores", {
 });
 
 export const catalogs = sqliteTable("catalogs", {
-  id: text("id").primaryKey(),
+  id: int("id").primaryKey({ autoIncrement: true }),
   storeId: int("store_id").notNull().references(() => stores.id),
   title: text("title").notNull(),
   description: text("description"),
@@ -17,5 +17,6 @@ export const catalogs = sqliteTable("catalogs", {
   thumbnail: text("thumbnail").notNull(),
   pdfLink: text("pdf_link"),
   images: text("images").notNull(), // JSON string array
+  status: text("status").default("pending"), // pending/published/rejected
   createdAt: int("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
 });

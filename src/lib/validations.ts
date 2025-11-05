@@ -23,6 +23,7 @@ export const catalogSchema = z.object({
   thumbnail: z.string().url("رابط الصورة المصغرة غير صالح"),
   pdfLink: z.string().url("رابط PDF غير صالح").nullable().optional(),
   images: z.array(z.string().url()).min(1, "يجب إضافة صورة واحدة على الأقل"),
+  status: z.enum(["pending", "published", "rejected"]).default("pending"),
   createdAt: z.coerce.date().optional(),
 });
 

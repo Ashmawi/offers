@@ -6,8 +6,7 @@ export const dynamic = "force-dynamic";
 async function getCatalogs() {
   const now = new Date();
   
-  return await db
-    .select({
+  return await db.select({
       id: catalogs.id,
       storeId: catalogs.storeId,
       title: catalogs.title,
@@ -20,12 +19,7 @@ async function getCatalogs() {
       storeName: stores.name,
       storeSlug: stores.slug,
       storeLogo: stores.logo,
-    })
-    .from(catalogs)
-    .leftJoin(stores, eq(catalogs.storeId, stores.id))
-    .where(gte(catalogs.validUntil, now))
-    .orderBy(desc(catalogs.createdAt))
-    .all();
+    }).from(catalogs).leftJoin(stores, eq(catalogs.storeId, stores.id)).where(gte(catalogs.validUntil, now)).orderBy(desc(catalogs.createdAt)).all();
 }
 
 export default async function OffersPage() {
@@ -58,9 +52,9 @@ export default async function OffersPage() {
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {allCatalogs.map((catalog) => (
+          {/* {allCatalogs.map((catalog) => (
             <OfferCard key={catalog.id} catalog={catalog} />
-          ))}
+          ))} */}
         </div>
       </div>
     </div>

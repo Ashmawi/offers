@@ -1,37 +1,43 @@
-import Link from "next/link";
+import OfferCard from "@/components/OfferCard";
+import OffersList from "@/components/OffersList";
+import { db, catalogs, stores, eq, desc } from "@/db";
 
-export default function Home() {
+export const revalidate = 0;
+
+export default async function Home() {
+
+  const initialOffers = await db.select().from(catalogs)
+    // .leftJoin(stores, eq(catalogs.storeId, stores.id))
+    .where(eq(catalogs.status, "published"))
+    .orderBy(desc(catalogs.createdAt)).limit(5).all();
+
+  const nextCursor = initialOffers.length === 10 ? initialOffers[9].id : null;
+
+  if (initialOffers.length === 0) {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-20">
+            <p className="text-2xl text-gray-600">لا توجد عروض متاحة حالياً</p>
+            <p className="text-gray-500 mt-4">تحقق مرة أخرى قريباً!</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-linear-to-br from-purple-50 via-pink-50 to-blue-50">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h1 className="text-6xl font-bold mb-6 bg-linear-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            🛍️ Offers
-          </h1>
-          <p className="text-2xl text-gray-700 mb-4">
-            أحدث عروض وكتالوجات المتاجر في مكان واحد
-          </p>
-          <p className="text-lg text-gray-600">
-            اكتشف أفضل العروض من متاجرك المفضلة
-          </p>
+          <p className="text-2xl text-gray-700 mb-4">أحدث عروض الاسعار المتاجر في مكان واحد</p>
         </div>
-
-        <div className="flex justify-center gap-6 mb-16">
-          <Link
-            href="/offers"
-            className="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all transform hover:scale-105 shadow-lg"
-          >
-            تصفح العروض 🔥
-          </Link>
-          <Link
-            href="/api/stores"
-            className="px-8 py-4 bg-gray-200 text-gray-800 font-bold rounded-xl hover:bg-gray-300 transition-all transform hover:scale-105 shadow-lg"
-          >
-            API المتاجر 📡
-          </Link>
+        <div className="min-h-screen p-8">
+          <OffersList initialOffers={initialOffers} initialCursor={nextCursor} />
         </div>
-
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      </div>
+      <div className="bg-linear-to-br from-purple-50 via-pink-50 to-blue-50 pt-12 border-t border-gray-200">
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mt-8">
           <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
             <div className="text-4xl mb-4">🏪</div>
             <h3 className="text-xl font-bold mb-3 text-gray-800">متاجر متعددة</h3>
@@ -57,8 +63,8 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="text-center mt-16 text-gray-500">
-          <p>بُني بـ Next.js 16 + Drizzle ORM + Turso</p>
+        <div className="text-center mt-16 pb-8 text-gray-500">
+          <p>أسعار مصر {new Date().toLocaleDateString("ar-EG")}</p>
         </div>
       </div>
     </div>
