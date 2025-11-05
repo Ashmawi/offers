@@ -48,10 +48,7 @@ export async function POST(request: NextRequest) {
     const validatedData = createCatalogSchema.parse(body);
 
     // Convert images array to JSON string for storage
-    const dataToInsert = {
-      ...validatedData,
-      images: JSON.stringify(validatedData.images),
-    };
+    const dataToInsert = { ...validatedData, images: JSON.stringify(validatedData.images) };
 
     const result = await db.insert(catalogs).values(dataToInsert).returning();
     

@@ -1,5 +1,5 @@
 import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
+import { sql, relations } from "drizzle-orm";
 
 export const stores = sqliteTable("stores", {
   id: int("id").primaryKey({ autoIncrement: true }),
@@ -20,3 +20,15 @@ export const catalogs = sqliteTable("catalogs", {
   status: text("status").default("pending"), // pending/published/rejected
   createdAt: int("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
 });
+
+// Relation
+export const catalogsRelations = relations(catalogs, ({ one }) => ({
+  store: one(stores, {
+    fields: [catalogs.storeId],
+    references: [stores.id],
+  }),
+}));
+
+export const storesRelations = relations(stores, ({ many }) => ({
+  catalogs: many(catalogs),
+}));

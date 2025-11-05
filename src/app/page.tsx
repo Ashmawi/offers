@@ -1,16 +1,13 @@
-import OfferCard from "@/components/OfferCard";
+// import OfferCard from "@/components/OfferCard";
 import OffersList from "@/components/OffersList";
-import { db, catalogs, stores, eq, desc } from "@/db";
+import { getLatestPublishedOffers } from "@/lib/queries";
 
 export const revalidate = 0;
 
 export default async function Home() {
 
-  const initialOffers = await db.select().from(catalogs)
-    // .leftJoin(stores, eq(catalogs.storeId, stores.id))
-    .where(eq(catalogs.status, "published"))
-    .orderBy(desc(catalogs.createdAt)).limit(5).all();
-
+  const initialOffers = await getLatestPublishedOffers(5);
+    
   const nextCursor = initialOffers.length === 10 ? initialOffers[9].id : null;
 
   if (initialOffers.length === 0) {

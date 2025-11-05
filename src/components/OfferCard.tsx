@@ -1,6 +1,5 @@
-import { Catalog } from "@/db/types";
 import Link from "next/link";
-import Image from "next/image";
+import { type Catalog } from "@/db";
 
 export default function OfferCard({ catalog } : { catalog: Catalog }) {
   const images = JSON.parse(catalog.images);
@@ -17,7 +16,7 @@ export default function OfferCard({ catalog } : { catalog: Catalog }) {
           <h3 className="font-bold text-xl mb-2 group-hover:text-blue-600 transition">
             {catalog.title}
           </h3>
-          <p className="text-gray-600 text-sm mb-3">Store ID: {catalog.storeId}</p>
+          <p className="text-gray-600 text-sm mb-3">Store ID: {catalog.store.name}</p>
           <div className="flex justify-between items-center">
             <span className="text-red-600 font-bold">
               حتى {new Date(catalog.validUntil).toLocaleDateString("ar-EG")}
