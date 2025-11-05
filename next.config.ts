@@ -8,6 +8,16 @@ const nextConfig: NextConfig = {
   // Enable React Compiler for optimized builds
   reactCompiler: true,
 
+  // Image optimization configuration
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
+  },
+
   // Turbopack configuration to handle non-JS files in node_modules
   turbopack: {
     rules: {

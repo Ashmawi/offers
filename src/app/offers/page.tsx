@@ -1,29 +1,15 @@
-import { db, catalogs, stores, eq, desc, gte } from "@/db";
 import OfferCard from "@/components/OfferCard";
+import { getLatestPublishedOffers } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
-async function getCatalogs() {
-  const now = new Date();
-  
-  return await db.select({
-      id: catalogs.id,
-      storeId: catalogs.storeId,
-      title: catalogs.title,
-      description: catalogs.description,
-      validUntil: catalogs.validUntil,
-      thumbnail: catalogs.thumbnail,
-      pdfLink: catalogs.pdfLink,
-      images: catalogs.images,
-      createdAt: catalogs.createdAt,
-      storeName: stores.name,
-      storeSlug: stores.slug,
-      storeLogo: stores.logo,
-    }).from(catalogs).leftJoin(stores, eq(catalogs.storeId, stores.id)).where(gte(catalogs.validUntil, now)).orderBy(desc(catalogs.createdAt)).all();
-}
-
 export default async function OffersPage() {
-  const allCatalogs = await getCatalogs();
+  const allCatalogs = await getLatestPublishedOffers(5);
+  
+  // Debug: شوف شكل الداتا
+  if (allCatalogs.length > 0) {
+    console.log("📦 Sample catalog data:", allCatalogs[0]);
+  }
 
   if (allCatalogs.length === 0) {
     return (
@@ -52,9 +38,9 @@ export default async function OffersPage() {
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* {allCatalogs.map((catalog) => (
+          {allCatalogs.map((catalog) => (
             <OfferCard key={catalog.id} catalog={catalog} />
-          ))} */}
+          ))}
         </div>
       </div>
     </div>

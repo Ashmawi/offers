@@ -29,5 +29,6 @@ export type {
   Store,
   Catalog,
   NewStore,
-  NewCatalog
+  NewCatalog,
+  CatalogWithStore,
 } from "./types";

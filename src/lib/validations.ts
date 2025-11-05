@@ -13,7 +13,7 @@ export const updateStoreSchema = storeSchema.partial().required({ id: true });
 
 // Catalog validation schemas
 export const catalogSchema = z.object({
-  id: z.string().min(1, "معرف الكتالوج مطلوب"),
+  id: z.number().int().positive().optional(), // Auto-increment, so optional
   storeId: z.number().int().positive("معرف المتجر غير صالح"),
   title: z.string().min(1, "عنوان الكتالوج مطلوب").max(255),
   description: z.string().max(1000).nullable().optional(),
@@ -27,7 +27,7 @@ export const catalogSchema = z.object({
   createdAt: z.coerce.date().optional(),
 });
 
-export const createCatalogSchema = catalogSchema.omit({ createdAt: true });
+export const createCatalogSchema = catalogSchema.omit({ id: true, createdAt: true });
 export const updateCatalogSchema = catalogSchema.partial().required({ id: true });
 
 // Webhook validation schema

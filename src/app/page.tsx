@@ -7,7 +7,6 @@ export const revalidate = 0;
 export default async function Home() {
 
   const initialOffers = await getLatestPublishedOffers(5);
-    
   const nextCursor = initialOffers.length === 10 ? initialOffers[9].id : null;
 
   if (initialOffers.length === 0) {

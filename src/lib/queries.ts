@@ -7,6 +7,19 @@ export async function getLatestPublishedOffers(limit = 5) {
     limit,
     with: {
       store: {
+        columns: { id: true, name: true, slug: true, logo: true },
+      },
+    },
+  });
+}
+
+export async function getOfferById(offerId: number) {
+  console.log(offerId);
+  
+  return db.query.catalogs.findFirst({
+    where: eq(catalogs.id, offerId),
+    with: {
+      store: {
         columns: { name: true },
       },
     },

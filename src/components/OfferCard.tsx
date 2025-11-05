@@ -1,19 +1,28 @@
 import Link from "next/link";
-import { type Catalog } from "@/db";
+import Image from "next/image";
+import { type CatalogWithStore } from "@/db";
+import { slugify } from "@/lib/slugify";
 
-export default function OfferCard({ catalog } : { catalog: Catalog }) {
+interface OfferCardProps {
+  catalog: CatalogWithStore;
+}
+
+export default function OfferCard({ catalog }: OfferCardProps) {
   const images = JSON.parse(catalog.images);
-
+  
   return (
-    <Link href={`/offers/${catalog.id}`} className="block group">
+    <Link href={`/offers/${catalog.id}-${slugify(catalog.store.name + '-' + catalog.title)}`} className="block group">
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition transform hover:-translate-y-2">
-        <img
-          src={catalog.images ? images[0] : "/placeholder.png"}
-          alt={catalog.title}
-          className="w-full h-64 object-cover group-hover:scale-105 transition-transform"
-        />
+        <div className="relative w-full h-64 overflow-hidden">
+          <Image
+            src={catalog.images ? images[0] : "/placeholder.png"}
+            alt={catalog.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform"
+          />
+        </div>
         <div className="p-6">
-          <h3 className="font-bold text-xl mb-2 group-hover:text-blue-600 transition">
+          <h3 className="text-gray-800 font-bold text-xl mb-2 group-hover:text-blue-600 transition">
             {catalog.title}
           </h3>
           <p className="text-gray-600 text-sm mb-3">Store ID: {catalog.store.name}</p>
