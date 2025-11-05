@@ -5,8 +5,7 @@ Production-ready offers catalog application with Next.js, Prisma ORM, and Turso 
 ## 🚀 Tech Stack
 
 - **Framework**: Next.js 16 (App Router + Turbopack)
-- **ORM**: Prisma with Turso adapter
-- **Database**: Turso (Distributed SQLite)
+- **Database**: Turso (Distributed SQLite) with LibSQL client
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS v4
 
@@ -73,29 +72,28 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 ]
 ```
 
-## 💡 Using Prisma in Your Code
+## 💡 Using LibSQL in Your Code
 
 ```typescript
-import prisma from "@/lib/prisma";
+import turso from "@/lib/prisma";
 
 // Fetch all stores
-const stores = await prisma.store.findMany();
+const result = await turso.execute(
+  "SELECT * FROM Store ORDER BY name ASC"
+);
+const stores = result.rows;
 
-// Get store with catalogs
-const store = await prisma.store.findUnique({
-  where: { slug: "kazyon" },
-  include: { catalogs: true },
+// Get store by slug
+const store = await turso.execute({
+  sql: "SELECT * FROM Store WHERE slug = ?",
+  args: ["kazyon"],
 });
 
 // Create catalog
-const catalog = await prisma.catalog.create({
-  data: {
-    storeId: 1,
-    title: "Weekly Offers",
-    validUntil: new Date("2025-12-31"),
-    thumbnail: "/images/thumb.jpg",
-    images: JSON.stringify(["/img1.jpg"]),
-  },
+await turso.execute({
+  sql: `INSERT INTO Catalog (id, storeId, title, validUntil, thumbnail, images, createdAt)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+  args: ["catalog-id", 1, "Weekly Offers", "2025-12-31", "/thumb.jpg", "[]"],
 });
 ```
 
@@ -107,15 +105,14 @@ src/
 │   ├── api/stores/        # API routes
 │   ├── layout.tsx         # Root layout
 │   └── page.tsx           # Home page
-├── lib/
-│   └── prisma.ts          # Prisma client
-└── generated/prisma/      # Generated types
+└── lib/
+    └── prisma.ts          # LibSQL/Turso client
 
 prisma/
-└── schema.prisma          # Database schema
+└── schema.prisma          # Schema documentation
 
 scripts/
-├── migrate.ts             # Create tables
+├── migrate.ts             # Create tables in Turso
 └── seed.ts                # Seed data
 ```
 
