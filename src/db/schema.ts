@@ -2,7 +2,7 @@ import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 
 export const stores = sqliteTable("stores", {
-  id: int("id").primaryKey(),
+  id: int("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull().unique(),
   slug: text("slug").notNull().unique(),
   logo: text("logo"),

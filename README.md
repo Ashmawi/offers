@@ -1,10 +1,12 @@
-# Offers - Next.js + Prisma + Turso 🛍️
+````markdown
+# Offers - Next.js + Drizzle ORM + Turso 🛍️
 
-Production-ready offers catalog application with Next.js, Prisma ORM, and Turso database.
+Production-ready offers catalog application with Next.js, Drizzle ORM, and Turso database.
 
 ## 🚀 Tech Stack
 
 - **Framework**: Next.js 16 (App Router + Turbopack)
+- **ORM**: Drizzle ORM
 - **Database**: Turso (Distributed SQLite) with LibSQL client
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS v4
@@ -31,14 +33,19 @@ TURSO_DATABASE_URL=libsql://your-database.turso.io
 TURSO_AUTH_TOKEN=your-auth-token
 ```
 
-### 3. Create database tables
+### 3. Push database schema to Turso
 ```bash
-npm run migrate
+npm run db:push
 ```
 
-### 4. Seed initial data
+Or generate migrations:
 ```bash
-npm run seed
+npm run db:generate
+```
+
+### 4. Seed initial data (optional)
+```bash
+npm run db:seed
 ```
 
 ### 5. Start development server
@@ -48,53 +55,132 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to view the app.
 
+### 6. Open Drizzle Studio (optional)
+```bash
+npm run db:studio
+```
+
+Browse your database visually at [https://local.drizzle.studio](https://local.drizzle.studio)
+
 ## 📝 Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run start` - Start production server
-- `npm run migrate` - Create/update database tables
-- `npm run seed` - Populate database with stores
+- `npm run db:push` - Push schema changes to Turso database
+- `npm run db:generate` - Generate migration files
+- `npm run db:studio` - Open Drizzle Studio (Database UI)
 - `npm run lint` - Run ESLint
 
-## 🔌 API Example
+## 🔌 API Endpoints
+
+### Stores API
 
 **GET** `/api/stores` - Fetch all stores
 ```json
 [
   {
     "id": 1,
-    "name": "كازيون",
-    "slug": "kazyon",
-    "logo": null,
-    "_count": { "catalogs": 0 }
+    "name": "كارفور",
+    "slug": "carrefour",
+    "logo": null
   }
 ]
 ```
 
-## 💡 Using LibSQL in Your Code
+**POST** `/api/stores` - Create new store
+```json
+{
+  "name": "كارفور",
+  "slug": "carrefour",
+  "logo": "https://example.com/logo.png"
+}
+```
+
+### Catalogs API
+
+**GET** `/api/catalogs` - Fetch all active catalogs
+```json
+[
+  {
+    "id": "catalog-123",
+    "storeId": 1,
+    "title": "عروض الأسبوع",
+    "description": "أفضل العروض لهذا الأسبوع",
+    "validUntil": "2025-12-31T23:59:59.000Z",
+    "thumbnail": "https://example.com/thumb.jpg",
+    "pdfLink": "https://example.com/catalog.pdf",
+    "images": "[\"img1.jpg\",\"img2.jpg\"]",
+    "createdAt": "2025-11-05T10:00:00.000Z",
+    "store": {
+      "id": 1,
+      "name": "كارفور",
+      "slug": "carrefour",
+      "logo": null
+    }
+  }
+]
+```
+
+**POST** `/api/catalogs` - Create new catalog
+```json
+{
+  "id": "catalog-123",
+  "storeId": 1,
+  "title": "عروض الأسبوع",
+  "description": "أفضل العروض",
+  "validUntil": "2025-12-31",
+  "thumbnail": "https://example.com/thumb.jpg",
+  "pdfLink": "https://example.com/catalog.pdf",
+  "images": ["https://example.com/img1.jpg"]
+}
+```
+
+### Webhook API
+
+**POST** `/api/webhook` - Receive offer webhooks (requires `x-secret` header)
+
+## 💡 Using Drizzle ORM in Your Code
 
 ```typescript
-import turso from "@/lib/prisma";
+import { db, stores, catalogs, eq, desc } from "@/db";
 
 // Fetch all stores
-const result = await turso.execute(
-  "SELECT * FROM Store ORDER BY name ASC"
-);
-const stores = result.rows;
+const allStores = await db.select().from(stores).all();
 
 // Get store by slug
-const store = await turso.execute({
-  sql: "SELECT * FROM Store WHERE slug = ?",
-  args: ["kazyon"],
-});
+const store = await db
+  .select()
+  .from(stores)
+  .where(eq(stores.slug, "kazyon"))
+  .get();
+
+// Create new store
+const newStore = await db
+  .insert(stores)
+  .values({
+    name: "كارفور",
+    slug: "carrefour",
+    logo: "/logos/carrefour.png"
+  })
+  .returning();
 
 // Create catalog
-await turso.execute({
-  sql: `INSERT INTO Catalog (id, storeId, title, validUntil, thumbnail, images, createdAt)
-        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
-  args: ["catalog-id", 1, "Weekly Offers", "2025-12-31", "/thumb.jpg", "[]"],
+await db.insert(catalogs).values({
+  id: "catalog-id",
+  storeId: 1,
+  title: "Weekly Offers",
+  validUntil: new Date("2025-12-31"),
+  thumbnail: "/thumb.jpg",
+  images: JSON.stringify(["/img1.jpg", "/img2.jpg"]),
 });
+
+// Get catalogs with store info
+const catalogsWithStores = await db
+  .select()
+  .from(catalogs)
+  .leftJoin(stores, eq(catalogs.storeId, stores.id))
+  .orderBy(desc(catalogs.createdAt));
 ```
 
 ## 📁 Project Structure
@@ -102,18 +188,22 @@ await turso.execute({
 ```
 src/
 ├── app/
-│   ├── api/stores/        # API routes
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Home page
-└── lib/
-    └── prisma.ts          # LibSQL/Turso client
+│   ├── api/               # API routes
+│   │   ├── stores/       # Stores endpoints
+│   │   └── webhook/      # Webhook handler
+│   ├── offers/           # Offers/Catalogs pages
+│   ├── layout.tsx        # Root layout
+│   └── page.tsx          # Home page
+├── components/           # React components
+│   └── OfferCard.tsx    # Catalog card component
+└── db/
+    ├── index.ts         # Database client & exports
+    ├── schema.ts        # Drizzle schema definitions
+    └── types.ts         # TypeScript types
 
-prisma/
-└── schema.prisma          # Schema documentation
-
-scripts/
-├── migrate.ts             # Create tables in Turso
-└── seed.ts                # Seed data
+drizzle/
+├── 0000_*.sql          # Generated migrations
+└── meta/               # Migration metadata
 ```
 
 ## 🚀 Deploy to Vercel
@@ -126,5 +216,6 @@ scripts/
 ## 📚 Learn More
 
 - [Next.js Docs](https://nextjs.org/docs)
-- [Prisma Docs](https://prisma.io/docs)
+- [Drizzle ORM Docs](https://orm.drizzle.team/docs/overview)
 - [Turso Docs](https://docs.turso.tech)
+- [LibSQL Client](https://github.com/tursodatabase/libsql-client-ts)
