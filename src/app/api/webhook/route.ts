@@ -1,80 +1,52 @@
-import { webhookOfferSchema, WebhookOfferInput } from '@/lib/validations';
 import { NextRequest, NextResponse } from 'next/server';
-import { put } from "@vercel/blob";
-import { db, catalogs } from '@/db';
+import { createCatalogSchema } from '@/lib/validations';
+import { db, processedWebhooks, catalogs, eq } from '@/db';
+
+import { processOfferWebhook } from '@/services/offerWebhookService';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Validate the incoming webhook data
-    const validationResult = webhookOfferSchema.safeParse(body);
-    
-    if (!validationResult.success) {
-      console.error('Validation failed:', validationResult.error.format());
-      return NextResponse.json({
-        error: 'بيانات العرض غير صالحة',
-        details: validationResult.error.format()
-      }, { status: 400 });
+    //  Retrieving webhookId
+    const { webhookId } = body;
+    if (!webhookId) {return NextResponse.json({ error: 'webhookId required' }, { status: 400 });}
+
+    // Check: Has this webhook been processed before?
+    const already = await db.select().from(processedWebhooks).where(eq(processedWebhooks.webhookId, webhookId)).limit(1);
+
+    if (already.length > 0 && already[0].catalogId) {
+      // Fetch the associated catalog
+      const [catalog] = await db.select().from(catalogs).where(eq(catalogs.id, already[0].catalogId)).limit(1);
+
+      return NextResponse.
+        json({message: "This Offer has already been processed.",
+          catalog,
+          alreadyProcessed: true,},
+          { status: 200 });
     }
 
-    const offerInput: WebhookOfferInput = validationResult.data;
-
-    const uploadedImages: string[] = [];
-
-    for (const imgPath of offerInput.images) {
-      
-      // return NextResponse.json({message: "تم حفظ العرض بنجاح ✅", images: imgPath }, { status: 200 });
-
-      try {
-        // Create full URL for local paths
-        const imageUrl = imgPath;
-
-        // Upload the image from the source
-        const response = await fetch(imageUrl);
-        if (!response.ok) throw new Error(`فشل تحميل الصورة: ${imageUrl}`);
-
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-
-        // Vercel Blob
-        const blob = await put(`offers/${Date.now()}-${Math.random()}.jpg`, buffer, {access: "public"});
-
-        console.log("✅ Uploaded:", blob.url);
-        uploadedImages.push(blob.url);
-      } catch (err) {
-        console.error("Error uploading image:", err);
-      }
+    // Check the data format
+    const parseResult = createCatalogSchema.safeParse(body);
+    console.log("Parsed result:", parseResult);
+    if (!parseResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid data', details: parseResult.error.format() },
+        { status: 400 }
+      );
     }
 
-    // Update catalog data with new image URLs
-    const catalogData = {
-      ...offerInput,
-      images: uploadedImages.length > 0 ? uploadedImages : offerInput.images,
-    };
+    // Process the webhook to create the catalog
+    const catalog = await processOfferWebhook(parseResult.data);
 
-    // TODO: insert catalogData into database
-    console.log("🎯 Final catalog data:", catalogData);
+    // 5. Create a record that the webhook has been processed
+    await db.insert(processedWebhooks).values({webhookId, catalogId: catalog.id, processedAt: new Date() });
 
-    // Process the validated webhook data from n8n here
-    console.log('Received validated webhook from n8n:', offerInput);
-
-    // Save the catalog data to the database
-    const insertedCatalog = await db.insert(catalogs).values({
-      storeId: offerInput.storeId,
-      title: offerInput.title,
-      description: offerInput.description,
-      validUntil: offerInput.validUntil,
-      thumbnail: offerInput.thumbnail,
-      pdfLink: offerInput.pdfLink,
-      images: JSON.stringify(uploadedImages),
-    }).returning();
-    return NextResponse.json({message: "تم حفظ العرض بنجاح ✅", catalog: insertedCatalog[0] }, { status: 200 });
-  } catch (error) {
+    return NextResponse.json({ message: 'Catalog created successfully', catalog }, { status: 200 }
+      );
+    } catch (error) {
     console.error('Error processing webhook:', error);
-    return NextResponse.json({
-      error: 'خطأ في معالجة البيانات',
-      details: error instanceof Error ? error.message : 'خطأ غير معروف'
-    }, { status: 500 });
+    // Do not log in processedWebhooks here → n8n will retry
+    return NextResponse.json({ error: 'Error processing webhook', details: error },{ status: 500 });
   }
 }

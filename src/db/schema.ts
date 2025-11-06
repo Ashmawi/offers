@@ -1,6 +1,13 @@
 import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sql, relations } from "drizzle-orm";
 
+export const processedWebhooks = sqliteTable("processed_webhooks", {
+  id: int("id").primaryKey({ autoIncrement: true }),
+  webhookId: text("webhook_id").notNull().unique(),
+  catalogId: int("catalog_id").references(() => catalogs.id),
+  processedAt: int("processed_at", { mode: "timestamp" }).notNull(),
+});
+
 export const stores = sqliteTable("stores", {
   id: int("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull().unique(),
@@ -14,7 +21,8 @@ export const catalogs = sqliteTable("catalogs", {
   title: text("title").notNull(),
   description: text("description"),
   validUntil: text("valid_until"),
-  thumbnail: text("thumbnail").notNull(),
+  thumbnail: text("thumbnail"),
+  refLink: text("ref_link"),
   pdfLink: text("pdf_link"),
   images: text("images").notNull(), // JSON string array
   status: text("status").default("pending"), // pending/published/rejected
