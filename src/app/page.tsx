@@ -5,8 +5,9 @@ export const revalidate = 600; // 10 minutes ISR
 
 export default async function Home() {
 
-  const initialOffers = await getLatestPublishedOffers(5);
-  const nextCursor = initialOffers.length === 10 ? initialOffers[9].id : null;
+  const LIMIT = 12;
+  const initialOffers = await getLatestPublishedOffers(LIMIT);
+  const nextCursor = initialOffers.length === LIMIT ? initialOffers[initialOffers.length - 1].id : null;
 
   if (initialOffers.length === 0) {
     return (
@@ -22,13 +23,14 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-purple-50 via-pink-50 to-blue-50">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-8">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-4">
           <p className="text-xl text-gray-700">أحدث عروض الاسعار المتاجر في مكان واحد</p>
         </div>
         <div className="min-h-screen p-8">
           <OffersList initialOffers={initialOffers} initialCursor={nextCursor} />
+          {/* لاحقاً: زر تحميل المزيد يستخدم nextCursor */}
         </div>
       </div>
       <div className="bg-linear-to-br from-purple-50 via-pink-50 to-blue-50 pt-12 border-t border-gray-200">

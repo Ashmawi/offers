@@ -31,6 +31,8 @@ Create `.env` file:
 ```env
 TURSO_DATABASE_URL=libsql://your-database.turso.io
 TURSO_AUTH_TOKEN=your-auth-token
+NEXT_PUBLIC_SITE_URL=https://your-domain.com
+N8N_WEBHOOK_SECRET=super-secret-token
 ```
 
 ### 3. Push database schema to Turso
@@ -138,7 +140,22 @@ Browse your database visually at [https://local.drizzle.studio](https://local.dr
 
 ### Webhook API
 
-**POST** `/api/webhook` - Receive offer webhooks (requires `x-secret` header)
+**POST** `/api/webhook` - Receive offer webhooks
+
+Headers:
+- `x-webhook-secret: <N8N_WEBHOOK_SECRET>`
+
+Body (example):
+```json
+{
+  "webhookId": "n8n-exec-123",
+  "storeId": 1,
+  "title": "عروض الأسبوع",
+  "description": "أفضل العروض",
+  "thumbnail": "https://...",
+  "images": ["https://.../1.jpg", "https://.../2.jpg"]
+}
+```
 
 ## 💡 Using Drizzle ORM in Your Code
 

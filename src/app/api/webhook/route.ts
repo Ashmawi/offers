@@ -6,6 +6,13 @@ import { processOfferWebhook } from '@/services/offerWebhookService';
 
 export async function POST(request: NextRequest) {
   try {
+    // Simple shared-secret verification to secure the endpoint
+    const providedSecret = request.headers.get('x-webhook-secret');
+    const expectedSecret = process.env.N8N_WEBHOOK_SECRET || process.env.WEBHOOK_SECRET;
+    if (!expectedSecret || providedSecret !== expectedSecret) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
 
     //  Retrieving webhookId
@@ -28,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     // Check the data format
     const parseResult = createCatalogSchema.safeParse(body);
-    console.log("Parsed result:", parseResult);
+  // console.log("Parsed result:", parseResult);
     if (!parseResult.success) {
       return NextResponse.json(
         { error: 'Invalid data', details: parseResult.error.format() },

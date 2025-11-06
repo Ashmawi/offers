@@ -14,7 +14,7 @@ export default function ImagePopup({ imageUrl, alt, thumbnailUrl = imageUrl, cla
   const [open, setOpen] = useState(false);
 
   return (
-    <main style={{ padding: 24, direction: "ltr" }}>
+    <main style={{ padding: 24 }} dir="rtl">
       <div style={{ maxWidth: 320, cursor: "pointer" }} onClick={() => setOpen(true)}>
         <Image
           src={thumbnailUrl}
