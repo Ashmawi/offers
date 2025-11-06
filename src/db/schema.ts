@@ -48,3 +48,17 @@ export const catalogsRelations = relations(catalogs, ({ one }) => ({
 export const storesRelations = relations(stores, ({ many }) => ({
   catalogs: many(catalogs),
 }));
+
+// Rate limiting hits for webhook requests
+export const webhookHits = sqliteTable(
+  "webhook_hits",
+  {
+    id: int("id").primaryKey({ autoIncrement: true }),
+    secret: text("secret").notNull(),
+    ip: text("ip"),
+    createdAt: int("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  },
+  (table) => ({
+    webhookHitsSecretIdx: index("idx_webhook_hits_secret_created").on(table.secret, table.createdAt),
+  })
+);

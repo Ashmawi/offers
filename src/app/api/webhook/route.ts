@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCatalogSchema } from '@/lib/validations';
-import { db, processedWebhooks, catalogs, eq } from '@/db';
+import { db, processedWebhooks, catalogs, webhookHits, eq, and, gte, count } from '@/db';
 
 import { processOfferWebhook } from '@/services/offerWebhookService';
 
@@ -11,6 +11,28 @@ export async function POST(request: NextRequest) {
     const expectedSecret = process.env.N8N_WEBHOOK_SECRET || process.env.WEBHOOK_SECRET;
     if (!expectedSecret || providedSecret !== expectedSecret) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Simple rate limiting per secret within a sliding window
+    const windowMs = Number(process.env.WEBHOOK_RATE_WINDOW_MS || '60000'); // 1 min
+    const limit = Number(process.env.WEBHOOK_RATE_LIMIT || '60'); // 60 req/min/secret
+    const since = new Date(Date.now() - windowMs);
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown';
+
+    try {
+      const [{ cnt }] = await db
+        .select({ cnt: count() })
+        .from(webhookHits)
+        .where(and(eq(webhookHits.secret, providedSecret!), gte(webhookHits.createdAt, since)));
+
+      if (cnt >= limit) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+      }
+
+      await db.insert(webhookHits).values({ secret: providedSecret!, ip, createdAt: new Date() });
+    } catch (e) {
+      // If rate limiter fails, don't block webhook processing; proceed.
+      console.warn('Rate limiter error, proceeding without block:', e);
     }
 
     const body = await request.json();

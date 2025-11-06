@@ -17,7 +17,7 @@ export const db = drizzle(client, { schema });
 
 export { schema };
 
-export const { stores, catalogs, processedWebhooks } = schema;
+export const { stores, catalogs, processedWebhooks, webhookHits } = schema;
 
 export {
   eq, ne, gt, gte, lt, lte, and, or,
