@@ -12,9 +12,6 @@ export default async function OffersPage() {
     return (
       <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-bold text-center mb-4 text-gray-800">
-            العروض والكتالوجات 🛍️
-          </h1>
           <div className="text-center py-20">
             <p className="text-2xl text-gray-600">لا توجد عروض متاحة حالياً</p>
             <p className="text-gray-500 mt-4">تحقق مرة أخرى قريباً!</p>

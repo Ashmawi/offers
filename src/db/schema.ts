@@ -4,8 +4,8 @@ import { sql, relations } from "drizzle-orm";
 export const processedWebhooks = sqliteTable("processed_webhooks", {
   id: int("id").primaryKey({ autoIncrement: true }),
   webhookId: text("webhook_id").notNull().unique(),
-  catalogId: int("catalog_id").references(() => catalogs.id),
-  processedAt: int("processed_at", { mode: "timestamp" }).notNull(),
+  catalogId: int("catalog_id").references(() => catalogs.id, { onDelete: "cascade" }),
+  processedAt: int("processed_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
 });
 
 export const stores = sqliteTable("stores", {
@@ -15,9 +15,7 @@ export const stores = sqliteTable("stores", {
   logo: text("logo"),
 });
 
-export const catalogs = sqliteTable(
-  "catalogs",
-  {
+export const catalogs = sqliteTable("catalogs", {
     id: int("id").primaryKey({ autoIncrement: true }),
     storeId: int("store_id").notNull().references(() => stores.id),
     title: text("title").notNull(),
@@ -29,8 +27,7 @@ export const catalogs = sqliteTable(
     images: text("images").notNull(), // JSON string array
     status: text("status").default("pending"), // pending/published/rejected
     createdAt: int("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-  },
-  (table) => ({
+  }, (table) => ({
     catalogsStatusIdx: index("idx_catalogs_status").on(table.status),
     catalogsCreatedAtIdx: index("idx_catalogs_created_at").on(table.createdAt),
     catalogsStoreIdIdx: index("idx_catalogs_store_id").on(table.storeId),
@@ -50,15 +47,12 @@ export const storesRelations = relations(stores, ({ many }) => ({
 }));
 
 // Rate limiting hits for webhook requests
-export const webhookHits = sqliteTable(
-  "webhook_hits",
-  {
+export const webhookHits = sqliteTable("webhook_hits", {
     id: int("id").primaryKey({ autoIncrement: true }),
     secret: text("secret").notNull(),
     ip: text("ip"),
     createdAt: int("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-  },
-  (table) => ({
+  }, (table) => ({
     webhookHitsSecretIdx: index("idx_webhook_hits_secret_created").on(table.secret, table.createdAt),
   })
 );
