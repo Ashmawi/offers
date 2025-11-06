@@ -1,30 +1,89 @@
 import { getOfferById } from '@/lib/queries';
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import ImagePopup from '@/components/ImagePopup';
+import type { Metadata } from 'next';
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://as3armasr.com';
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-export default async function OfferPage({ params }: Props) {
-  // Await params in Next.js 15+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  
+  const idPart = slug.split('-')[0];
+  const id = Number(idPart);
+  if (isNaN(id)) {
+    return {
+      title: 'عرض غير موجود',
+      description: 'العرض المطلوب غير متوفر أو الرابط غير صحيح'
+    };
+  }
+  const catalog = await getOfferById(id);
+  if (!catalog) {
+    return {
+      title: 'العرض غير متوفر',
+      description: 'قد يكون تم حذفه أو غير منشور'
+    };
+  }
+  let images: string[] = [];
+  try { images = JSON.parse(catalog.images); } catch { images = []; }
+
+  return {
+    title: `${catalog.title} | ${catalog.store.name}`,
+    description: catalog.description || `اكتشف عرض ${catalog.title} من ${catalog.store.name}`,
+    alternates: {
+      canonical: `${siteUrl}/offers/${slug}`
+    },
+    openGraph: {
+      type: 'article',
+      title: `${catalog.title} | ${catalog.store.name}`,
+      description: catalog.description || `اكتشف عرض ${catalog.title} من ${catalog.store.name}`,
+      url: `${siteUrl}/offers/${slug}`,
+      images: [catalog.thumbnail || images[0] || `${siteUrl}/og-default.png`].filter(Boolean).map(u => ({ url: u })),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${catalog.title} | ${catalog.store.name}`,
+      description: catalog.description || `اكتشف عرض ${catalog.title} من ${catalog.store.name}`,
+      images: [catalog.thumbnail || images[0] || `${siteUrl}/og-default.png`]
+    }
+  };
+}
+
+export default async function OfferPage({ params }: Props) {
+  const { slug } = await params;
   const slugParts = slug.split('-');
   const id = Number(slugParts[0]);
-
-  if (isNaN(id)) {
-    return notFound();
-  }
-  
+  if (isNaN(id)) return notFound();
   const catalog = await getOfferById(id);
-  
-  if (!catalog) {
-    return notFound();
-  }
+  if (!catalog) return notFound();
+  let images: string[] = [];
+  try { images = JSON.parse(catalog.images); } catch { images = []; }
 
-  const images = JSON.parse(catalog.images);
+  // Structured Data
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Offer',
+    name: catalog.title,
+    description: catalog.description || '',
+    url: `${siteUrl}/offers/${slug}`,
+    seller: { '@type': 'Organization', name: catalog.store.name },
+    image: images,
+    availability: 'https://schema.org/InStock',
+    offers: {
+      '@type': 'AggregateOffer',
+      offerCount: images.length,
+    },
+    breadcrumb: {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: siteUrl },
+        { '@type': 'ListItem', position: 2, name: 'العروض', item: `${siteUrl}/offers` },
+        { '@type': 'ListItem', position: 3, name: catalog.title, item: `${siteUrl}/offers/${slug}` },
+      ]
+    }
+  };
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 p-8">
@@ -54,7 +113,7 @@ export default async function OfferPage({ params }: Props) {
               <div className="grid grid-cols-3 md:grid-cols-4 gap-6">
                 {images.map((image: string, index: number) => (
                   <div key={index} className="relative aspect-3/4 overflow-hidden rounded-lg shadow-lg">
-                    <ImagePopup imageUrl={image} alt={`${catalog.title} - صورة ${index + 1}`} />
+                    <ImagePopup imageUrl={image} alt={`${catalog.title} - صورة رقم ${index + 1}`} />
                   </div>
                 ))}
               </div>
@@ -74,6 +133,10 @@ export default async function OfferPage({ params }: Props) {
               </div>
             )}
           </div>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import OfferCard from "@/components/OfferCard";
 import { getLatestPublishedOffers } from "@/lib/queries";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 600; // ISR for offers list
 
 export default async function OffersPage() {
   const allCatalogs = await getLatestPublishedOffers(5);

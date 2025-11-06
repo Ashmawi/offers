@@ -8,21 +8,33 @@ interface OfferCardProps {
 }
 
 export default function OfferCard({ catalog }: OfferCardProps) {
-  const images = JSON.parse(catalog.images);
-  
+  let images: string[] = [];
+  try {
+    images = JSON.parse(catalog.images);
+  } catch {
+    images = [];
+  }
+  const firstImage = catalog.thumbnail || images[0];
+  const href = `/offers/${catalog.id}-${slugify(catalog.store.name + '-' + catalog.title)}`;
+
   return (
-    <Link href={`/offers/${catalog.id}-${slugify(catalog.store.name + '-' + catalog.title)}`} className="block group">
+    <Link href={href} className="block group" aria-label={`مشاهدة عرض ${catalog.title} من ${catalog.store.name}`}>
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition transform hover:-translate-y-2">
         <div className="relative w-full h-64 overflow-hidden">
-          <Image
-            src={catalog.thumbnail ? catalog.thumbnail : images[0]}
-            className="object-cover group-hover:scale-105 transition-transform"
-            sizes="(max-width: 768px) 100vw, 50vw"
-            alt={catalog.title}
-            loading="eager"
-            priority
-            fill
-          />
+          {firstImage && (
+            <Image
+              src={firstImage}
+              className="object-cover group-hover:scale-105 transition-transform"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              alt={`${catalog.title} - ${catalog.store.name}`}
+              fill
+            />
+          )}
+          {!firstImage && (
+            <div className="flex items-center justify-center w-full h-full bg-gray-100 text-gray-500">
+              لا توجد صور
+            </div>
+          )}
         </div>
         <div className="p-4 border-t border-gray-200">
           <h3 className="text-gray-800 font-bold text-lg mb-2 group-hover:text-blue-600 transition">
@@ -34,10 +46,7 @@ export default function OfferCard({ catalog }: OfferCardProps) {
               {catalog.store.name}
             </p>
             <div className="flex justify-between items-center">
-              {/* <span className="text-red-600 font-bold">
-                حتى {new Date(catalog.validUntil).toLocaleDateString("ar-EG")}
-              </span> */}
-              <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full"> {images.length} صور </span>
+              <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full" aria-label="عدد الصور"> {images.length} صور </span>
             </div>
           </div>
         </div>

@@ -3,6 +3,8 @@ import { Vazirmatn } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://as3armasr.com";
+
 const vazirmatn = Vazirmatn({
   variable: "--font-vazirmatn",
   subsets: ["arabic", "latin"],
@@ -10,8 +12,45 @@ const vazirmatn = Vazirmatn({
 });
 
 export const metadata: Metadata = {
-  title: "Offers - عروض المتاجر",
-  description: "أحدث عروض وكتالوجات المتاجر في مكان واحد",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "عروض المتاجر | أسعار مصر",
+    template: "%s | أسعار مصر"
+  },
+  description: "أحدث عروض وكتالوجات وأسعار المتاجر في مكان واحد محدثة باستمرار",
+  keywords: ["عروض", "كتالوج", "أسعار", "هايبر", "سوبر ماركت", "كارفور", "كازيون"],
+  alternates: {
+    canonical: siteUrl,
+  },
+  openGraph: {
+    type: "website",
+    locale: "ar_EG",
+    url: siteUrl,
+    siteName: "أسعار مصر",
+    title: "عروض المتاجر | أسعار مصر",
+    description: "أحدث عروض وكتالوجات وأسعار المتاجر في مكان واحد",
+    images: [
+      {
+        url: "https://via.placeholder.com/1200x630.png?text=%D8%A3%D8%B3%D8%B9%D8%A7%D8%B1+%D9%85%D8%B5%D8%B1",
+        width: 1200,
+        height: 630,
+        alt: "عروض المتاجر المصرية"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "عروض المتاجر | أسعار مصر",
+    description: "أحدث عروض وكتالوجات وأسعار المتاجر في مكان واحد",
+    images: [
+      "https://via.placeholder.com/1200x630.png?text=%D8%A3%D8%B3%D8%B9%D8%A7%D8%B1+%D9%85%D8%B5%D8%B1"
+    ]
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png"
+  },
 };
 
 export default function RootLayout({ children, }: Readonly<{ children: React.ReactNode; }>) {

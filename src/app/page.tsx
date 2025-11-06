@@ -1,8 +1,7 @@
 import OffersList from "@/components/OffersList";
 import { getLatestPublishedOffers } from "@/lib/queries";
 
-// export const revalidate = 0;
-export const dynamic = "force-dynamic";
+export const revalidate = 600; // 10 minutes ISR
 
 export default async function Home() {
 
