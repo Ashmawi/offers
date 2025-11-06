@@ -17,10 +17,8 @@ export const catalogSchema = z.object({
   storeId: z.number().int().positive("معرف المتجر غير صالح"),
   title: z.string().min(1, "عنوان الكتالوج مطلوب").max(255),
   description: z.string().max(1000).nullable().optional(),
-  validUntil: z.coerce.date().refine((date) => date > new Date(), {
-    message: "تاريخ الانتهاء يجب أن يكون في المستقبل",
-  }),
-  thumbnail: z.string().url("رابط الصورة المصغرة غير صالح"),
+  validUntil: z.string().max(1000).nullable().optional(),
+  thumbnail: z.string().url("رابط الصورة المصغرة غير صالح").nullable().optional(),
   pdfLink: z.string().url("رابط PDF غير صالح").nullable().optional(),
   images: z.array(z.string().url()).min(1, "يجب إضافة صورة واحدة على الأقل"),
   status: z.enum(["pending", "published", "rejected"]).default("pending"),
@@ -30,14 +28,15 @@ export const catalogSchema = z.object({
 export const createCatalogSchema = catalogSchema.omit({ id: true, createdAt: true });
 export const updateCatalogSchema = catalogSchema.partial().required({ id: true });
 
-// Webhook validation schema
+// Webhook offer validation schema (for incoming offers from n8n)
 export const webhookOfferSchema = z.object({
-  product: z.string().min(1, "اسم المنتج مطلوب"),
-  price: z.number().positive("السعر يجب أن يكون موجب"),
-  oldPrice: z.number().positive().nullable().optional(),
-  store: z.string().min(1, "اسم المتجر مطلوب"),
-  image: z.string().url().nullable().optional(),
-  offerUrl: z.string().url().nullable().optional(),
+  storeId: z.number().int().positive("معرف المتجر غير صالح"),
+  title: z.string().min(1, "عنوان العرض مطلوب").max(255),
+  description: z.string().max(1000).nullable().optional(),
+  validUntil: z.string().max(1000).nullable().optional(),
+  thumbnail: z.string().url("رابط الصورة المصغرة غير صالح").nullable().optional(),
+  pdfLink: z.string().url("رابط PDF غير صالح").nullable().optional(),
+  images: z.array(z.string().url()).min(1, "يجب إضافة صورة واحدة على الأقل"),
 });
 
 export type StoreInput = z.infer<typeof createStoreSchema>;

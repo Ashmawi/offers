@@ -6,35 +6,36 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx scripts/seed.ts",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx scripts/seed.ts"
+    "lint": "eslint"
   },
   "dependencies": {
     "@libsql/client": "^0.15.15",
+    "@vercel/blob": "^2.0.0",
     "drizzle-orm": "^0.44.7",
     "next": "16.0.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "react-modal-image": "^2.6.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@types/react-modal-image": "^2.6.4",
+    "@tailwindcss/postcss": "^4.1.16",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
     "babel-plugin-react-compiler": "1.0.0",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.6",
-    "eslint": "^9",
+    "eslint": "^9.39.1",
     "eslint-config-next": "16.0.1",
     "raw-loader": "^4.0.2",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.1.16",
     "tsx": "^4.20.6",
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   }
 }

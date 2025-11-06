@@ -1,6 +1,7 @@
 import { getOfferById } from '@/lib/queries';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
+import ImagePopup from '@/components/ImagePopup';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -35,7 +36,7 @@ export default async function OfferPage({ params }: Props) {
             <div className="flex items-center gap-4">
               <p className="text-lg">📍 {catalog.store.name}</p>
               <span className="px-4 py-1 bg-white/20 rounded-full text-sm">
-                صالح حتى {new Date(catalog.validUntil).toLocaleDateString("ar-EG")}
+                صالح حتى {catalog.validUntil ? new Date(catalog.validUntil).toLocaleDateString("ar-EG") : "غير محدد"}
               </span>
             </div>
           </div>
@@ -50,14 +51,15 @@ export default async function OfferPage({ params }: Props) {
 
             {/* Images Gallery */}
             <div className="mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-3 md:grid-cols-4 gap-6">
                 {images.map((image: string, index: number) => (
                   <div key={index} className="relative aspect-3/4 overflow-hidden rounded-lg shadow-lg">
-                    <Image
+                    {/* <Image
                       fill
                       src={image}
                       alt={`${catalog.title} - صورة ${index + 1}`}
-                      className="object-cover hover:scale-105 transition-transform"/>
+                      className="object-cover hover:scale-105 transition-transform"/> */}
+                    <ImagePopup imageUrl={image} alt={`${catalog.title} - صورة ${index + 1}`} />
                   </div>
                 ))}
               </div>

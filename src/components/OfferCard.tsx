@@ -15,7 +15,7 @@ export default function OfferCard({ catalog }: OfferCardProps) {
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition transform hover:-translate-y-2">
         <div className="relative w-full h-64 overflow-hidden">
           <Image
-            src={catalog.images ? images[0] : "/placeholder.png"}
+            src={catalog.thumbnail ? catalog.thumbnail : images[0]}
             alt={catalog.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform"

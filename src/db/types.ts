@@ -13,8 +13,8 @@ export type CatalogWithStore = {
   storeId: number;
   title: string;
   description: string | null;
-  validUntil: Date;
-  thumbnail: string;
+  validUntil: string | null;
+  thumbnail: string | null;
   pdfLink: string | null;
   images: string;
   createdAt: Date;

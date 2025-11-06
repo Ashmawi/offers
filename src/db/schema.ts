@@ -13,7 +13,7 @@ export const catalogs = sqliteTable("catalogs", {
   storeId: int("store_id").notNull().references(() => stores.id),
   title: text("title").notNull(),
   description: text("description"),
-  validUntil: int("valid_until", { mode: "timestamp" }).notNull(),
+  validUntil: text("valid_until"),
   thumbnail: text("thumbnail").notNull(),
   pdfLink: text("pdf_link"),
   images: text("images").notNull(), // JSON string array
